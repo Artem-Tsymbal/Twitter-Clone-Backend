@@ -1,13 +1,15 @@
 import express from 'express';
 import mangoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
-import { UserModel, IUserModel } from '../models/UserModel';
+import { UserModel, IUserModel, IUserModelDocument } from '../models/UserModel';
 import { generateMD5 } from '../utils/generateHash';
 import { sendEmail } from '../utils/sendEmail';
 
 const isValidObjectId = mangoose.Types.ObjectId.isValid;
 
 class UserController {
+
   async index(_: any, res: express.Response): Promise<void> {
     try {
       const users = await UserModel.find({}).exec();
@@ -76,7 +78,7 @@ class UserController {
           emailTo: data.email,
           subject: 'Подтверждение почты Twitter Clone',
           html: `Для того, чтобы подтвердить почту, перейдите <a href="http://localhost:${process.env.PORT || 8888
-            }/users/verify?hash=${data.confirmHash}">по этой ссылке</a>`,
+            }/auth/verify?hash=${data.confirmHash}">по этой ссылке</a>`,
         },
         (err: Error | null) => {
           if (err) {
@@ -128,6 +130,44 @@ class UserController {
       });
     }
   }
+
+  async giveOutJWT(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const user = req.user ? (req.user as IUserModelDocument).toJSON() : undefined;
+
+      res.json({
+        status: 'success',
+        data: {
+          user,
+          token: jwt.sign({ data: req.user }, process.env.SECRET_KEY || '345', {
+            expiresIn: '14 days',
+          })
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
+    }
+  }
+
+  async getUserInfo(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const user = req.user ? (req.user as IUserModelDocument).toJSON() : undefined;
+
+      res.json({
+        status: 'success',
+        data: user,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
+    }
+  }
 }
+
 
 export const UserCtrl = new UserController();
