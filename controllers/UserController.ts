@@ -1,8 +1,11 @@
 import express from 'express';
+import mangoose from 'mongoose';
 import { validationResult } from 'express-validator';
 import { UserModel, IUserModel } from '../models/UserModel';
 import { generateMD5 } from '../utils/generateHash';
 import { sendEmail } from '../utils/sendEmail';
+
+const isValidObjectId = mangoose.Types.ObjectId.isValid;
 
 class UserController {
   async index(_: any, res: express.Response): Promise<void> {
@@ -14,6 +17,34 @@ class UserController {
         data: users,
       });
     } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
+    }
+  }
+
+  async show(req: express.Request, res: express.Response) {
+    try {
+      const userId = req.params.id;
+
+      const user = await UserModel.findById(userId).exec();
+
+      if (!isValidObjectId(userId)) {
+        res.status(400).send();
+        return;
+      }
+
+      if (!user) {
+        res.status(404).send();
+        return;
+      }
+      res.json({
+        status: 'succsess',
+        data: user,
+      });
+    }
+    catch (error) {
       res.status(500).json({
         status: 'error',
         message: error,
@@ -33,7 +64,7 @@ class UserController {
         email: req.body.email,
         username: req.body.username,
         fullname: req.body.fullname,
-        password: req.body.password,
+        password: generateMD5(req.body.password + process.env.SECRET_KEY),
         confirmHash: generateMD5(process.env.SECRET_KEY || Math.random().toString()),
       };
 

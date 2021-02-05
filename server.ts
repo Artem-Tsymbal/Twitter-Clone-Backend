@@ -13,6 +13,7 @@ app.use(express.json());
 
 app.get('/users', UserCtrl.index);
 app.post('/users', registerValidations, UserCtrl.create);
+app.get('/users/:id', registerValidations, UserCtrl.show);
 app.get('/users/verify', registerValidations, UserCtrl.verify);
 
 app.listen(process.env.PORT, (): void => {
