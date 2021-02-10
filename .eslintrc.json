@@ -1,0 +1,51 @@
+{
+    "env": {
+        "es6": true,
+        "browser": true,
+        "node": true
+    },
+    "extends": [
+        "airbnb-typescript/base",
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "prettier"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 12,
+        "project": "./tsconfig.json"
+    },
+    "plugins": [
+        "@typescript-eslint",
+        "prettier"
+    ],
+    "rules": {
+        "eol-last": 1,
+        "semi": [
+            2,
+            "always"
+        ],
+        "import/no-extraneous-dependencies": [
+            "error",
+            {
+                "devDependencies": true
+            }
+        ],
+        "no-console": "off",
+        "max-len": [
+            2,
+            {
+                "code": 120
+            }
+        ],
+        "no-trailing-spaces": "error",
+        "no-underscore-dangle": [
+            2,
+            {
+                "allow": [
+                    "_id"
+                ]
+            }
+        ]
+    }
+}

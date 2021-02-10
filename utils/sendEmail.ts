@@ -1,5 +1,5 @@
 import { SentMessageInfo } from 'nodemailer/lib/sendmail-transport';
-import { mailer } from '../core/mailer';
+import mailer from '../core/mailer';
 
 interface ISendEmailProps {
   emailFrom: string;
@@ -8,24 +8,24 @@ interface ISendEmailProps {
   html: string;
 }
 
-export const sendEmail = (
+export default function sendEmail(
   { emailFrom, emailTo, subject, html }: ISendEmailProps,
   callback?: (err: Error | null, info: SentMessageInfo) => void,
-) => {
+): void {
   mailer.sendMail(
     {
       from: emailFrom,
       to: emailTo,
-      subject: subject,
-      html: html,
+      subject,
+      html,
     },
     callback ||
-    function (err: Error | null, info: SentMessageInfo) {
+    ((err: Error | null, info: SentMessageInfo) => {
       if (err) {
         console.log(err);
       } else {
         console.log(info);
       }
-    },
+    }),
   );
-};
+}

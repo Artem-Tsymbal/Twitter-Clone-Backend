@@ -9,4 +9,4 @@ const options = {
   },
 };
 
-export const mailer = nodemailer.createTransport(options);
+export default nodemailer.createTransport(options);

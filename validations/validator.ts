@@ -1,6 +1,6 @@
 import { body } from 'express-validator';
 
-export const registerValidations = [
+const registerValidations = [
   body('email', 'Введите E-Mail')
     .isEmail()
     .withMessage('Неверный E-Mail')
@@ -37,3 +37,5 @@ export const registerValidations = [
       }
     }),
 ];
+
+export default registerValidations;

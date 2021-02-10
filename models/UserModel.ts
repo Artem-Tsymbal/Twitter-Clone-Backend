@@ -50,11 +50,12 @@ const UserSchema = new Schema<IUserModelDocument>({
 });
 
 UserSchema.set('toJSON', {
-  transform: function (_: any, obj: { password: any; confirmHash: any; }) {
-    delete obj.password;
-    delete obj.confirmHash;
-    return obj;
-  }
-})
+  transform: (_: never, obj: { password?: string; confirmHash?: string; }) => {
+    const temp = obj;
+    delete temp.password;
+    delete temp.confirmHash;
+    return temp;
+  },
+});
 
 export const UserModel = model<IUserModelDocument>('User', UserSchema);

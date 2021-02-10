@@ -1,16 +1,16 @@
+/* eslint-disable class-methods-use-this */
 import express from 'express';
 import mangoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
-import { UserModel, IUserModel, IUserModelDocument } from '../models/UserModel';
-import { generateMD5 } from '../utils/generateHash';
-import { sendEmail } from '../utils/sendEmail';
+import { UserModel, IUserModel, IUserModelDocument } from '../models/userModel';
+import generateMD5 from '../utils/generateHash';
+import sendEmail from '../utils/sendEmail';
 
 const isValidObjectId = mangoose.Types.ObjectId.isValid;
 
 class UserController {
-
-  async index(_: any, res: express.Response): Promise<void> {
+  async get(res: express.Response): Promise<void> {
     try {
       const users = await UserModel.find({}).exec();
 
@@ -26,10 +26,9 @@ class UserController {
     }
   }
 
-  async show(req: express.Request, res: express.Response) {
+  async getById(req: express.Request, res: express.Response): Promise<void> {
     try {
       const userId = req.params.id;
-
       const user = await UserModel.findById(userId).exec();
 
       if (!isValidObjectId(userId)) {
@@ -41,12 +40,28 @@ class UserController {
         res.status(404).send();
         return;
       }
+
       res.json({
         status: 'succsess',
         data: user,
       });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
     }
-    catch (error) {
+  }
+
+  async getMe(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const user = req.user ? (req.user as IUserModelDocument).toJSON() : undefined;
+
+      res.json({
+        status: 'success',
+        data: user,
+      });
+    } catch (error) {
       res.status(500).json({
         status: 'error',
         message: error,
@@ -57,6 +72,7 @@ class UserController {
   async create(req: express.Request, res: express.Response): Promise<void> {
     try {
       const errors = validationResult(req);
+
       if (!errors.isEmpty()) {
         res.status(400).json({ status: 'error', errors: errors.array() });
         return;
@@ -69,7 +85,6 @@ class UserController {
         password: generateMD5(req.body.password + process.env.SECRET_KEY),
         confirmHash: generateMD5(process.env.SECRET_KEY || Math.random().toString()),
       };
-
       const user = await UserModel.create(data);
 
       sendEmail(
@@ -77,8 +92,8 @@ class UserController {
           emailFrom: 'admin@twitter.com',
           emailTo: data.email,
           subject: 'Подтверждение почты Twitter Clone',
-          html: `Для того, чтобы подтвердить почту, перейдите <a href="http://localhost:${process.env.PORT || 8888
-            }/auth/verify?hash=${data.confirmHash}">по этой ссылке</a>`,
+          html: `Для того, чтобы подтвердить почту, перейдите <a href="http://localhost:${process.env.PORT || 8888}
+          /auth/verify?hash=${data.confirmHash}">по этой ссылке</a>`,
         },
         (err: Error | null) => {
           if (err) {
@@ -102,16 +117,16 @@ class UserController {
     }
   }
 
-  async verify(req: any, res: express.Response): Promise<void> {
+  async verify(req: express.Request, res: express.Response): Promise<void> {
     try {
-      const hash = req.query.hash;
+      const { hash } = req.query;
 
       if (!hash) {
         res.status(400).send();
         return;
       }
 
-      const user = await UserModel.findOne({ confirmHash: hash }).exec();
+      const user = await UserModel.findOne({ confirmHash: hash as string }).exec();
 
       if (user) {
         user.confirmed = true;
@@ -141,24 +156,8 @@ class UserController {
           user,
           token: jwt.sign({ data: req.user }, process.env.SECRET_KEY || '345', {
             expiresIn: '14 days',
-          })
+          }),
         },
-      });
-    } catch (error) {
-      res.status(500).json({
-        status: 'error',
-        message: error,
-      });
-    }
-  }
-
-  async getUserInfo(req: express.Request, res: express.Response): Promise<void> {
-    try {
-      const user = req.user ? (req.user as IUserModelDocument).toJSON() : undefined;
-
-      res.json({
-        status: 'success',
-        data: user,
       });
     } catch (error) {
       res.status(500).json({
@@ -169,5 +168,4 @@ class UserController {
   }
 }
 
-
-export const UserCtrl = new UserController();
+export default new UserController();

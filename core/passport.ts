@@ -1,8 +1,8 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as JWTstrategy, ExtractJwt } from 'passport-jwt';
-import { IUserModel, UserModel } from '../models/UserModel';
-import { generateMD5 } from '../utils/generateHash';
+import { IUserModel, UserModel } from '../models/userModel';
+import generateMD5 from '../utils/generateHash';
 
 passport.use(
   new LocalStrategy(
@@ -10,7 +10,7 @@ passport.use(
       try {
         const user = await UserModel
           .findOne({ $or: [{ email: username }, { username }] })
-          .select("+password")
+          .select('+password')
           .exec();
 
         if (!user) {
@@ -18,47 +18,49 @@ passport.use(
         }
 
         if (user.password === generateMD5(password + process.env.SECRET_KEY)) {
-          console.log('user')
           return done(null, user);
-        } else {
-          return done(null, false);
         }
+
+        return done(null, false);
       } catch (error) {
-        done(error, false);
+        return done(error, false);
       }
-    }),
+    },
+  ),
 );
 
 passport.use(
   new JWTstrategy(
     {
-      secretOrKey: process.env.SECRET_KEY,
+      secretOrKey: process.env.SECRET_KEY || '345',
       jwtFromRequest: ExtractJwt.fromHeader('token'),
     },
     async (payload: { data: IUserModel }, done) => {
       try {
         const user = await UserModel.findById(payload.data._id).exec();
+
         if (user) {
           done(null, user);
-          return;
         }
 
         done(null, false);
       } catch (error) {
         done(error, false);
       }
-    }
-  )
+    },
+  ),
 );
 
-passport.serializeUser((user: any, done) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+passport.serializeUser((user: any, done): void => {
   done(null, user._id);
 });
 
-passport.deserializeUser((id: string, done) => {
+passport.deserializeUser((id: string, done): void => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   UserModel.findById(id, (err: any, user: any) => {
     done(err, user);
   });
 });
 
-export { passport };
+export default passport;
