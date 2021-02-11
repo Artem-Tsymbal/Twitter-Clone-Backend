@@ -1,16 +1,14 @@
 /* eslint-disable class-methods-use-this */
 import express from 'express';
-import mangoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import { UserModel, IUserModel, IUserModelDocument } from '../models/userModel';
 import generateMD5 from '../utils/generateHash';
 import sendEmail from '../utils/sendEmail';
-
-const isValidObjectId = mangoose.Types.ObjectId.isValid;
+import isValidObjectId from '../utils/isValidObjectId';
 
 class UserController {
-  async get(res: express.Response): Promise<void> {
+  async get(_req: express.Request, res: express.Response): Promise<void> {
     try {
       const users = await UserModel.find({}).exec();
 
@@ -42,7 +40,7 @@ class UserController {
       }
 
       res.json({
-        status: 'succsess',
+        status: 'success',
         data: user,
       });
     } catch (error) {

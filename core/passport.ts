@@ -35,17 +35,17 @@ passport.use(
       secretOrKey: process.env.SECRET_KEY || '345',
       jwtFromRequest: ExtractJwt.fromHeader('token'),
     },
-    async (payload: { data: IUserModel }, done) => {
+    async (payload: { data: IUserModel }, done): Promise<void> => {
       try {
         const user = await UserModel.findById(payload.data._id).exec();
 
         if (user) {
-          done(null, user);
+          return done(null, user);
         }
 
-        done(null, false);
+        return done(null, false);
       } catch (error) {
-        done(error, false);
+        return done(error, false);
       }
     },
   ),
