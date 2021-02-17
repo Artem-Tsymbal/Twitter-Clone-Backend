@@ -1,14 +1,14 @@
 /* eslint-disable class-methods-use-this */
 import express from 'express';
 import { validationResult } from 'express-validator';
-import { ITweetModel, TweetModel } from '../models/TweetModel';
+import { ITweetModel, TweetModel } from '../models/tweetModel';
 import { IUserModel } from '../models/userModel';
 import isValidObjectId from '../utils/isValidObjectId';
 
 class TweetController {
   async get(_req: express.Request, res: express.Response): Promise<void> {
     try {
-      const tweets = await TweetModel.find({}).populate('user').exec();
+      const tweets = await TweetModel.find({}).populate('user').sort({ 'createdAt': '-1' }).exec();
 
       res.json({
         status: 'success',
@@ -71,7 +71,7 @@ class TweetController {
 
         res.json({
           status: 'success',
-          data: tweet,
+          data: await tweet.populate('user').execPopulate(),
         });
       }
     } catch (error) {

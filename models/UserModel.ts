@@ -3,7 +3,7 @@ import { model, Schema, Document } from 'mongoose';
 export interface IUserModel {
   _id?: string;
   email: string;
-  fullname: string;
+  fullName: string;
   username: string;
   password: string;
   confirmHash: string;
@@ -21,7 +21,7 @@ const UserSchema = new Schema<IUserModelDocument>({
     required: true,
     type: String,
   },
-  fullname: {
+  fullName: {
     required: true,
     type: String,
   },
