@@ -27,12 +27,13 @@ class UserController {
   async getById(req: express.Request, res: express.Response): Promise<void> {
     try {
       const userId = req.params.id;
-      const user = await UserModel.findById(userId).exec();
 
       if (!isValidObjectId(userId)) {
         res.status(400).send();
         return;
       }
+
+      const user = await UserModel.findById(userId).populate('tweets').exec();
 
       if (!user) {
         res.status(404).send();
@@ -76,12 +77,13 @@ class UserController {
         return;
       }
 
+      const randomStr = Math.random().toString();
       const data: IUserModel = {
         email: req.body.email,
         username: req.body.username,
         fullName: req.body.fullName,
         password: generateMD5(req.body.password + process.env.SECRET_KEY),
-        confirmHash: generateMD5(process.env.SECRET_KEY || Math.random().toString()),
+        confirmHash: generateMD5(process.env.SECRET_KEY + randomStr || randomStr),
       };
       const user = await UserModel.create(data);
 
@@ -90,8 +92,8 @@ class UserController {
           emailFrom: 'admin@twitter.com',
           emailTo: data.email,
           subject: 'Подтверждение почты Twitter Clone',
-          html: `Для того, чтобы подтвердить почту, перейдите <a href="http://localhost:${process.env.PORT || 8888}
-          /auth/verify?hash=${data.confirmHash}">по этой ссылке</a>`,
+          html: `Для того, чтобы подтвердить почту, перейдите <a href="http://localhost:3000/user
+          /activate/${data.confirmHash}">по этой ссылке</a>`,
         },
         (err: Error | null) => {
           if (err) {
@@ -132,6 +134,12 @@ class UserController {
 
         res.json({
           status: 'success',
+          data: {
+            ...user.toJSON(),
+            token: jwt.sign({ data: user.toJSON() }, process.env.SECRET_KEY || '345', {
+              expiresIn: '14 days',
+            }),
+          },
         });
       } else {
         res.status(404).json({ status: 'error', message: 'Пользователь не найден' });

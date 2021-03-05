@@ -5,6 +5,7 @@ export interface ITweetModel {
   _id?: string;
   text: string;
   user: IUserModelDocument | string;
+  images?: string[],
 }
 
 export type ITweetModelDocument = ITweetModel & Document;
@@ -20,6 +21,11 @@ const TweetSchema = new Schema<ITweetModelDocument>({
     ref: 'User',
     type: Schema.Types.ObjectId,
   },
+  images: [
+    {
+      type: String,
+    },
+  ],
 }, {
   timestamps: true,
 });
