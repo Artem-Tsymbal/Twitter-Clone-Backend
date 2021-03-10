@@ -8,9 +8,9 @@ export interface IUserModel {
   password: string;
   confirmHash: string;
   confirmed?: boolean;
-  location?: string;
-  about?: string;
-  website?: string;
+  biography?: string;
+  avatar?: string;
+  background?: string;
   tweets?: string[];
 }
 
@@ -45,9 +45,9 @@ const UserSchema = new Schema<IUserModelDocument>({
     type: Boolean,
     default: false,
   },
-  location: String,
-  about: String,
-  website: String,
+  biography: String,
+  avatar: String,
+  background: String,
   tweets: [{ type: Schema.Types.ObjectId, ref: 'Tweet' }],
 }, {
   timestamps: true,

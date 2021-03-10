@@ -7,6 +7,13 @@ import generateMD5 from '../utils/generateHash';
 import sendEmail from '../utils/sendEmail';
 import isValidObjectId from '../utils/isValidObjectId';
 
+interface IUpdateMeData {
+  avatar?: string;
+  background?: string;
+  fullName: string;
+  biography: string;
+}
+
 class UserController {
   async get(_req: express.Request, res: express.Response): Promise<void> {
     try {
@@ -60,6 +67,47 @@ class UserController {
         status: 'success',
         data: user,
       });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
+    }
+  }
+
+  async updateMe(req: express.Request, res: express.Response): Promise<void> {
+    const { _id: userId } = req.user as IUserModel;
+
+    try {
+      if (userId) {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+          res.status(400).json({ status: 'error', errors: errors.array() });
+        }
+
+        const data: IUpdateMeData = {
+          fullName: req.body.fullName,
+          biography: req.body.biography,
+        };
+
+        if (req.body.avatar) {
+          data.avatar = req.body.avatar;
+        }
+
+        if (req.body.background) {
+          data.background = req.body.background;
+        }
+
+        UserModel.findByIdAndUpdate(userId, data, { new: true }, (error, user) => {
+          if (error) res.send(error);
+
+          res.status(201).json({
+            status: 'success',
+            data: user,
+          });
+        });
+      }
     } catch (error) {
       res.status(500).json({
         status: 'error',

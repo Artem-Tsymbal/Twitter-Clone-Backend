@@ -12,6 +12,7 @@ import tweetController from './controllers/tweetController';
 import registrationValidation from './validations/sign-up';
 import tweetCreationValidation from './validations/tweetCreation';
 import uploadFileController from './controllers/uploadFileController';
+import userUpdateValidation from './validations/userUpdate';
 
 const app = express();
 const storage = multer.memoryStorage();
@@ -22,6 +23,7 @@ app.use(passport.initialize());
 
 app.get('/users/', userController.get);
 app.get('/users/me', passport.authenticate('jwt', { session: false }), userController.getMe);
+app.patch('/users/me', passport.authenticate('jwt', { session: false }), userUpdateValidation, userController.updateMe);
 app.get('/users/:id', userController.getById);
 
 app.get('/tweets/', tweetController.get);
