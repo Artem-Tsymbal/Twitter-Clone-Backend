@@ -94,6 +94,7 @@ class TweetController {
           text: req.body.text,
           images: req.body.images,
           user: user._id,
+          likes: [],
         };
 
         const tweet = await TweetModel.create(data);
@@ -114,9 +115,9 @@ class TweetController {
   }
 
   async update(req: express.Request, res: express.Response): Promise<void> {
-    const user = req.user as IUserModel;
-
     try {
+      const user = req.user as IUserModel;
+
       if (user) {
         const tweetId = req.params.id;
 
@@ -140,7 +141,6 @@ class TweetController {
           res.status(404).send();
         }
       }
-
     } catch (error) {
       res.status(500).json({
         status: 'error',

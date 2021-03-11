@@ -76,9 +76,9 @@ class UserController {
   }
 
   async updateMe(req: express.Request, res: express.Response): Promise<void> {
-    const { _id: userId } = req.user as IUserModel;
-
     try {
+      const { _id: userId } = req.user as IUserModel;
+
       if (userId) {
         const errors = validationResult(req);
 
