@@ -3,9 +3,10 @@ import express from 'express';
 import { validationResult } from 'express-validator';
 import { ITweetModel, TweetModel } from '../models/tweetModel';
 import { IUserModel } from '../models/userModel';
+import handlerId from '../utils/handlerId';
 import isValidObjectId from '../utils/isValidObjectId';
 
-class TweetController {
+class TweetsController {
   async get(_req: express.Request, res: express.Response): Promise<void> {
     try {
       const tweets = await TweetModel.find({}).populate('user').sort({ 'createdAt': '-1' }).exec();
@@ -95,6 +96,7 @@ class TweetController {
           images: req.body.images,
           user: user._id,
           likes: [],
+          favorite: false,
         };
 
         const tweet = await TweetModel.create(data);
@@ -150,9 +152,9 @@ class TweetController {
   }
 
   async delete(req: express.Request, res: express.Response): Promise<void> {
-    const user = req.user as IUserModel;
-
     try {
+      const user = req.user as IUserModel;
+
       if (user) {
         const tweetId = req.params.id;
 
@@ -181,6 +183,47 @@ class TweetController {
       });
     }
   }
+
+  async like(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const tweetId = req.params.id;
+      const { _id: userId } = req.user as IUserModel;
+
+      if (!isValidObjectId(tweetId)) {
+        res.status(400).send();
+        return;
+      }
+
+      if (userId) {
+        const tweet = await TweetModel.findById(tweetId).populate('user').exec();
+
+        if (tweet) {
+          const indexOfId = handlerId.searchId(tweet.likes, userId.toString());
+
+          if (indexOfId === -1) {
+            tweet.likes = handlerId.insertId(userId, tweet.likes);
+            tweet.favorite = true;
+          } else {
+            tweet.likes.splice(indexOfId, 1);
+            tweet.favorite = false;
+          }
+          tweet.save();
+
+          res.json({
+            status: 'success',
+            data: tweet,
+          });
+        } else {
+          res.status(404).send();
+        }
+      }
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
+    }
+  }
 }
 
-export default new TweetController();
+export default new TweetsController();

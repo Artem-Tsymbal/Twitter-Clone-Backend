@@ -48,7 +48,9 @@ const UserSchema = new Schema<IUserModelDocument>({
   biography: String,
   avatar: String,
   background: String,
-  tweets: [{ type: Schema.Types.ObjectId, ref: 'Tweet' }],
+  tweets: [
+    { type: Schema.Types.ObjectId, ref: 'Tweet' },
+  ],
 }, {
   timestamps: true,
 });

@@ -7,6 +7,7 @@ export interface ITweetModel {
   user: IUserModelDocument | string;
   images?: string[];
   likes: string[];
+  favorite: boolean;
 }
 
 export type ITweetModelDocument = ITweetModel & Document;
@@ -27,7 +28,14 @@ const TweetSchema = new Schema<ITweetModelDocument>({
       type: String,
     },
   ],
-  likes: [{ ref: 'User', type: Schema.Types.ObjectId }],
+  likes: [
+    { ref: 'User', type: Schema.Types.ObjectId },
+  ],
+  favorite: {
+    required: true,
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true,
 });
