@@ -9,7 +9,12 @@ import isValidObjectId from '../utils/isValidObjectId';
 class TweetsController {
   async get(_req: express.Request, res: express.Response): Promise<void> {
     try {
-      const tweets = await TweetModel.find({}).populate('user').sort({ 'createdAt': '-1' }).exec();
+      const tweets = await TweetModel
+        .find({})
+        .populate('user')
+        .populate({ path: 'retweet', populate: { path: 'user' } })
+        .sort({ 'createdAt': '-1' })
+        .exec();
 
       res.json({
         status: 'success',
@@ -32,7 +37,11 @@ class TweetsController {
         return;
       }
 
-      const tweet = await TweetModel.findById(tweetId).populate('user').exec();
+      const tweet = await TweetModel
+        .findById(tweetId)
+        .populate('user')
+        .populate({ path: 'retweet', populate: { path: 'user' } })
+        .exec();
 
       if (!tweet) {
         res.status(404).send();
@@ -60,7 +69,12 @@ class TweetsController {
         return;
       }
 
-      const tweet = await TweetModel.find({ user: userId }).populate('user').exec();
+      const tweet = await TweetModel
+        .find({ user: userId })
+        .populate('user')
+        .populate({ path: 'retweet', populate: { path: 'user' } })
+        .sort({ 'createdAt': '-1' })
+        .exec();
 
       if (!tweet) {
         res.status(404).send();
@@ -99,13 +113,17 @@ class TweetsController {
           favorite: false,
         };
 
+        if (req.body.retweet) {
+          data.retweet = req.body.retweet;
+        }
+
         const tweet = await TweetModel.create(data);
 
         user.tweets?.push(tweet._id);
 
         res.json({
           status: 'success',
-          data: await tweet.populate('user').execPopulate(),
+          data: await tweet.populate('user').populate({ path: 'retweet', populate: { path: 'user' } }).execPopulate(),
         });
       }
     } catch (error) {
@@ -195,7 +213,11 @@ class TweetsController {
       }
 
       if (userId) {
-        const tweet = await TweetModel.findById(tweetId).populate('user').exec();
+        const tweet = await TweetModel
+          .findById(tweetId)
+          .populate('user')
+          .populate({ path: 'retweet', populate: { path: 'user' } })
+          .exec();
 
         if (tweet) {
           const indexOfId = handlerId.searchId(tweet.likes, userId.toString());
