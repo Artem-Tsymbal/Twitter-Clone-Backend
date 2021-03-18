@@ -13,6 +13,18 @@ class TweetsController {
         .find({})
         .populate('user')
         .populate({ path: 'retweet', populate: { path: 'user' } })
+        .populate({
+          path: 'replyingTo', populate: [
+            { path: 'user' },
+            { path: 'retweet', populate: { path: 'user' } },
+            { path: 'replyingTo', populate: { path: 'user' } },
+          ],
+        })
+        .populate({
+          path: 'replies', populate: [
+            { path: 'user' }, { path: 'replyingTo', populate: { path: 'user' } },
+          ],
+        })
         .sort({ 'createdAt': '-1' })
         .exec();
 
@@ -41,6 +53,18 @@ class TweetsController {
         .findById(tweetId)
         .populate('user')
         .populate({ path: 'retweet', populate: { path: 'user' } })
+        .populate({
+          path: 'replyingTo', populate: [
+            { path: 'user' },
+            { path: 'retweet', populate: { path: 'user' } },
+            { path: 'replyingTo', populate: { path: 'user' } },
+          ],
+        })
+        .populate({
+          path: 'replies', populate: [
+            { path: 'user' }, { path: 'replyingTo', populate: { path: 'user' } },
+          ],
+        })
         .exec();
 
       if (!tweet) {
@@ -73,6 +97,18 @@ class TweetsController {
         .find({ user: userId })
         .populate('user')
         .populate({ path: 'retweet', populate: { path: 'user' } })
+        .populate({
+          path: 'replyingTo', populate: [
+            { path: 'user' },
+            { path: 'retweet', populate: { path: 'user' } },
+            { path: 'replyingTo', populate: { path: 'user' } },
+          ],
+        })
+        .populate({
+          path: 'replies', populate: [
+            { path: 'user' }, { path: 'replyingTo', populate: { path: 'user' } },
+          ],
+        })
         .sort({ 'createdAt': '-1' })
         .exec();
 
@@ -117,13 +153,48 @@ class TweetsController {
           data.retweet = req.body.retweet;
         }
 
+        if (req.body.replyingTo) {
+          data.replyingTo = req.body.replyingTo;
+        }
+
         const tweet = await TweetModel.create(data);
 
         user.tweets?.push(tweet._id);
 
+        if (req.body.retweet) {
+          const retweet = await TweetModel.findById(req.body.retweet._id);
+          if (retweet?.retweets) {
+            retweet.retweets = handlerId.insertId(tweet._id, retweet.retweets);
+            retweet.save();
+          }
+        }
+
+        if (req.body.replyingTo) {
+          const replyingTo = await TweetModel.findById(req.body.replyingTo._id);
+          if (replyingTo?.replies) {
+            replyingTo.replies = handlerId.insertId(tweet._id, replyingTo.replies);
+            replyingTo.save();
+          }
+        }
+
         res.json({
           status: 'success',
-          data: await tweet.populate('user').populate({ path: 'retweet', populate: { path: 'user' } }).execPopulate(),
+          data: await tweet
+            .populate('user')
+            .populate({ path: 'retweet', populate: { path: 'user' } })
+            .populate({
+              path: 'replyingTo', populate: [
+                { path: 'user' },
+                { path: 'retweet', populate: { path: 'user' } },
+                { path: 'replyingTo', populate: { path: 'user' } },
+              ],
+            })
+            .populate({
+              path: 'replies', populate: [
+                { path: 'user' }, { path: 'replyingTo', populate: { path: 'user' } },
+              ],
+            })
+            .execPopulate(),
         });
       }
     } catch (error) {
@@ -184,7 +255,27 @@ class TweetsController {
         const tweet = await TweetModel.findById(tweetId);
 
         if (tweet && typeof tweet.user === 'object') {
+
           if (String(tweet.user._id) === String(user._id)) {
+
+            if (tweet.retweet) {
+              const retweet = await TweetModel.findById(tweet.retweet);
+              if (retweet?.retweets) {
+                const indexOfId = handlerId.searchId(retweet?.retweets, tweet.retweet.toString());
+                retweet.retweets.splice(indexOfId, 1);
+                retweet.save();
+              }
+            }
+
+            if (tweet.replyingTo) {
+              const replyingTo = await TweetModel.findById(tweet.replyingTo);
+              if (replyingTo?.replies) {
+                const indexOfId = handlerId.searchId(replyingTo.replies, tweet.replyingTo.toString());
+                replyingTo.replies.splice(indexOfId, 1);
+                replyingTo.save();
+              }
+            }
+
             tweet.remove();
             res.send();
           } else {
@@ -217,6 +308,18 @@ class TweetsController {
           .findById(tweetId)
           .populate('user')
           .populate({ path: 'retweet', populate: { path: 'user' } })
+          .populate({
+            path: 'replyingTo', populate: [
+              { path: 'user' },
+              { path: 'retweet', populate: { path: 'user' } },
+              { path: 'replyingTo', populate: { path: 'user' } },
+            ],
+          })
+          .populate({
+            path: 'replies', populate: [
+              { path: 'user' }, { path: 'replyingTo', populate: { path: 'user' } },
+            ],
+          })
           .exec();
 
         if (tweet) {
