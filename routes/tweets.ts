@@ -5,7 +5,11 @@ import tweetCreationValidation from '../validations/tweetCreation';
 
 const router = Router();
 
+
+
 router.get('/', tweetsController.get);
+
+router.get('/followingUsers', passport.authenticate('jwt'), tweetsController.getfollowingUsers);
 
 router.post('/', passport.authenticate('jwt'), tweetCreationValidation, tweetsController.create);
 
@@ -15,8 +19,12 @@ router.patch('/:id', passport.authenticate('jwt'), tweetCreationValidation, twee
 
 router.get('/:id', tweetsController.getById);
 
+router.get('/:id/favorite', passport.authenticate('jwt'), tweetsController.getFavorite);
+
 router.get('/user/:id', tweetsController.getUserTweets);
 
 router.get('/:id/like', passport.authenticate('jwt'), tweetsController.like);
+
+
 
 module.exports = router;

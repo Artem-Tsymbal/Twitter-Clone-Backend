@@ -2,7 +2,7 @@
 import express from 'express';
 import { validationResult } from 'express-validator';
 import { ITweetModel, TweetModel } from '../models/tweetModel';
-import { IUserModel } from '../models/userModel';
+import { IUserModel, UserModel } from '../models/userModel';
 import handlerId from '../utils/handlerId';
 import isValidObjectId from '../utils/isValidObjectId';
 
@@ -76,6 +76,88 @@ class TweetsController {
         status: 'success',
         data: tweet,
       });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
+    }
+  }
+
+  async getfollowingUsers(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const { followingUsers } = req.user as IUserModel;
+
+      if (followingUsers) {
+        const tweets = await TweetModel
+          .find({ user: { $in: followingUsers } })
+          .populate('user')
+          .populate({ path: 'retweet', populate: { path: 'user' } })
+          .populate({
+            path: 'replyingTo', populate: [
+              { path: 'user' },
+              { path: 'retweet', populate: { path: 'user' } },
+              { path: 'replyingTo', populate: { path: 'user' } },
+            ],
+          })
+          .populate({
+            path: 'replies', populate: [
+              { path: 'user' }, { path: 'replyingTo', populate: { path: 'user' } },
+            ],
+          })
+          .sort({ 'createdAt': '-1' })
+          .exec();
+
+        res.json({
+          status: 'success',
+          data: tweets,
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
+    }
+  }
+
+  async getFavorite(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const userId = req.params.id;
+
+      if (!isValidObjectId(userId)) {
+        res.status(400).send();
+        return;
+      }
+
+      const user = await UserModel
+        .findById(userId)
+        .populate({
+          path: 'favoriteTweets', populate: [
+            { path: 'user' },
+            { path: 'retweet', populate: { path: 'user' } },
+            {
+              path: 'replyingTo', populate: [
+                { path: 'user' },
+                { path: 'retweet', populate: { path: 'user' } },
+                { path: 'replyingTo', populate: { path: 'user' } },
+              ],
+            },
+            {
+              path: 'replies', populate: [
+                { path: 'user' }, { path: 'replyingTo', populate: { path: 'user' } },
+              ],
+            },
+          ],
+        })
+        .exec();
+
+      if (user) {
+        res.json({
+          status: 'success',
+          data: user.favoriteTweets,
+        });
+      }
     } catch (error) {
       res.status(500).json({
         status: 'error',
@@ -304,6 +386,19 @@ class TweetsController {
       }
 
       if (userId) {
+        const user = await UserModel.findById(userId);
+
+        if (user) {
+          const indexOfId = handlerId.searchId(user.favoriteTweets, tweetId.toString());
+
+          if (indexOfId === -1) {
+            user.favoriteTweets = handlerId.insertId(tweetId, user.favoriteTweets);
+          } else {
+            user.favoriteTweets.splice(indexOfId, 1);
+          }
+          user.save();
+        }
+
         const tweet = await TweetModel
           .findById(tweetId)
           .populate('user')

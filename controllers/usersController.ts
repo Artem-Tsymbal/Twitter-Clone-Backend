@@ -6,6 +6,7 @@ import { UserModel, IUserModel, IUserModelDocument } from '../models/userModel';
 import generateMD5 from '../utils/generateHash';
 import sendEmail from '../utils/sendEmail';
 import isValidObjectId from '../utils/isValidObjectId';
+import handlerId from '../utils/handlerId';
 
 interface IUpdateMeData {
   avatar?: string;
@@ -130,6 +131,9 @@ class UsersController {
         email: req.body.email,
         username: req.body.username,
         fullName: req.body.fullName,
+        favoriteTweets: [],
+        followingUsers: [],
+        followers: [],
         password: generateMD5(req.body.password + process.env.SECRET_KEY),
         confirmHash: generateMD5(process.env.SECRET_KEY + randomStr || randomStr),
       };
@@ -157,6 +161,55 @@ class UsersController {
           }
         },
       );
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
+    }
+  }
+
+  async followUser(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const { _id: userId } = req.user as IUserModel;
+
+      if (userId) {
+        const user = await UserModel.findById(userId);
+        const { followedByMeUserId } = req.body;
+
+        if (user) {
+          const indexOfId = handlerId.searchId(user.followingUsers, followedByMeUserId.toString());
+
+          if (indexOfId === -1) {
+            user.followingUsers = handlerId.insertId(followedByMeUserId, user.followingUsers);
+          } else {
+            user.followingUsers.splice(indexOfId, 1);
+          }
+          user.save();
+
+          const followedByMeUser = await UserModel.findById(followedByMeUserId);
+
+          if (followedByMeUser) {
+            const indexOfFolower = handlerId.searchId(followedByMeUser.followers, user._id.toString());
+
+            if (indexOfFolower === -1) {
+              followedByMeUser.followers = handlerId.insertId(user._id, followedByMeUser.followers);
+            } else {
+              followedByMeUser.followers.splice(indexOfFolower, 1);
+            }
+            followedByMeUser.save();
+          } else {
+            res.status(404).send();
+          }
+
+          res.json({
+            status: 'success',
+            data: user,
+          });
+        } else {
+          res.status(404).send();
+        }
+      }
     } catch (error) {
       res.status(500).json({
         status: 'error',

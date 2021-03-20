@@ -11,6 +11,8 @@ router.get('/me', passport.authenticate('jwt', { session: false }), usersControl
 
 router.patch('/me', passport.authenticate('jwt', { session: false }), userUpdateValidation, usersController.updateMe);
 
+router.post('/me/follow', passport.authenticate('jwt', { session: false }), usersController.followUser);
+
 router.get('/:id', usersController.getById);
 
 module.exports = router;
