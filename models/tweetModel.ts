@@ -11,7 +11,7 @@ export interface ITweetModel {
   retweet?: string;
   retweets?: string[];
   likes: string[];
-  favorite: boolean;
+  isFavorite: boolean;
 }
 
 export type ITweetModelDocument = ITweetModel & Document;
@@ -49,7 +49,7 @@ const TweetSchema = new Schema<ITweetModelDocument>({
   likes: [
     { ref: 'User', type: Schema.Types.ObjectId },
   ],
-  favorite: {
+  isFavorite: {
     required: true,
     type: Boolean,
     default: false,

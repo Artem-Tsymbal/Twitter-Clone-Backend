@@ -228,7 +228,7 @@ class TweetsController {
           images: req.body.images,
           user: user._id,
           likes: [],
-          favorite: false,
+          isFavorite: false,
         };
 
         if (req.body.retweet) {
@@ -422,10 +422,10 @@ class TweetsController {
 
           if (indexOfId === -1) {
             tweet.likes = handlerId.insertId(userId, tweet.likes);
-            tweet.favorite = true;
+            tweet.isFavorite = true;
           } else {
             tweet.likes.splice(indexOfId, 1);
-            tweet.favorite = false;
+            tweet.isFavorite = false;
           }
           tweet.save();
 

@@ -16,7 +16,7 @@ interface IUpdateMeData {
 }
 
 class UsersController {
-  async get(_req: express.Request, res: express.Response): Promise<void> {
+  async getUsers(_req: express.Request, res: express.Response): Promise<void> {
     try {
       const users = await UserModel.find({}).exec();
 

@@ -5,7 +5,7 @@ import userUpdateValidation from '../validations/userUpdate';
 
 const router = Router();
 
-router.get('/', () => usersController.get);
+router.get('/', usersController.getUsers);
 
 router.get('/me', passport.authenticate('jwt', { session: false }), usersController.getMe);
 

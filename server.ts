@@ -6,7 +6,10 @@ dotenv.config();
 
 import './core/db';
 import express from 'express';
+import { Socket } from 'socket.io';
 import passport from './core/passport';
+
+const io = require('socket.io')();
 
 const authRouter = require('./routes/auth');
 const usersRouter = require('./routes/users');
@@ -23,6 +26,20 @@ app.use('/tweets', tweetsRouter);
 app.use('/upload', uploadFileRouter);
 app.use('/auth', authRouter);
 
-app.listen(process.env.PORT, (): void => {
+const server = app.listen(process.env.PORT, (): void => {
   console.log('Server started');
+});
+
+io.listen(server);
+
+io.on('connection', (socket: Socket) => {
+  const { id } = socket.handshake.query;
+  if (id) socket.join(id);
+
+  socket.on('send-message', ({ recipient, text, createdAt, sender }) => {
+    socket.to(recipient._id).emit('receive-message', {
+      recipient: sender, text, createdAt, sender,
+    });
+  });
+
 });
