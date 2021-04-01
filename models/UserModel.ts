@@ -67,6 +67,8 @@ const UserSchema = new Schema<IUserModelDocument>({
   timestamps: true,
 });
 
+UserSchema.index({ email: 'text', fullName: 'text', username: 'text' });
+
 UserSchema.set('toJSON', {
   transform: (_: never, obj: { password?: string; confirmHash?: string; }) => {
     const temp = obj;

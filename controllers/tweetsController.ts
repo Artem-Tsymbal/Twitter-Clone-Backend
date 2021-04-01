@@ -84,7 +84,7 @@ class TweetsController {
     }
   }
 
-  async getfollowingUsers(req: express.Request, res: express.Response): Promise<void> {
+  async getFollowingUsers(req: express.Request, res: express.Response): Promise<void> {
     try {
       const { followingUsers } = req.user as IUserModel;
 

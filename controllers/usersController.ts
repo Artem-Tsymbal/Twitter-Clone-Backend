@@ -32,6 +32,26 @@ class UsersController {
     }
   }
 
+
+  async searchUsers(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const { _id: userId } = req.user as IUserModel;
+      const { criteria } = req.body;
+
+      const users = await UserModel.find({ $text: { $search: criteria }, _id: { $ne: userId } }).limit(10);
+
+      res.json({
+        status: 'success',
+        data: users,
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: 'error',
+        message: error,
+      });
+    }
+  }
+
   async getById(req: express.Request, res: express.Response): Promise<void> {
     try {
       const userId = req.params.id;

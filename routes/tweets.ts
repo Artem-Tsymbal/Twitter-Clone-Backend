@@ -9,7 +9,7 @@ const router = Router();
 
 router.get('/', tweetsController.get);
 
-router.get('/following', passport.authenticate('jwt'), tweetsController.getfollowingUsers);
+router.get('/following', passport.authenticate('jwt'), tweetsController.getFollowingUsers);
 
 router.post('/', passport.authenticate('jwt'), tweetCreationValidation, tweetsController.create);
 

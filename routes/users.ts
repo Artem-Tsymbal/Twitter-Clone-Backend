@@ -7,6 +7,8 @@ const router = Router();
 
 router.get('/', usersController.getUsers);
 
+router.post('/search', passport.authenticate('jwt', { session: false }), usersController.searchUsers);
+
 router.get('/me', passport.authenticate('jwt', { session: false }), usersController.getMe);
 
 router.patch('/me', passport.authenticate('jwt', { session: false }), userUpdateValidation, usersController.updateMe);
