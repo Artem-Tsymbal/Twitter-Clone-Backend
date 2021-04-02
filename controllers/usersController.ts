@@ -32,7 +32,6 @@ class UsersController {
     }
   }
 
-
   async searchUsers(req: express.Request, res: express.Response): Promise<void> {
     try {
       const { _id: userId } = req.user as IUserModel;

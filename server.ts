@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable import/first */
 import dotenv from 'dotenv';
@@ -42,4 +43,7 @@ io.on('connection', (socket: Socket) => {
     });
   });
 
+  socket.on('disconnecting', () => {
+    if (id) socket.leave(id.toString());
+  });
 });
